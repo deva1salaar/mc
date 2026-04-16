@@ -1,0 +1,11 @@
+AREA SquareCode, CODE, READONLY
+ENTRY
+ LDR R0, =LOOKUP_TABLE ; 
+ MOV R1, #5 ; 
+ SUB R1, R1, #1 ; 
+ LDR R2, [R0, R1, LSL #2] ; 
+stop B stop ; 
+AREA SquareData, DATA, READONLY
+LOOKUP_TABLE
+ DCD 1, 4, 9, 16, 25, 36, 49, 64, 81, 100 ; Squares of 1 to 10 (32-bit words)
+END
