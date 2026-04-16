@@ -1,0 +1,15 @@
+AREA sum,CODE,READONLY
+ENTRY
+LDR R0, =array ; 
+LDR R1, LEN ; 
+EOR R2, R2, R2 ; 
+next LDR R3,[R0] ;
+ADD R2, R2, R3 ; 
+ ADD R0, R0, #+4 ; 
+SUBS R1, R1,#01 ; 
+BNE next ; 
+stop B stop ; 
+ AREA DATA1,DATA,READONLY
+array DCD 0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
+LEN DCD 0X0A
+END
