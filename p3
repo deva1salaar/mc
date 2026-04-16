@@ -1,0 +1,13 @@
+AREA factorial,CODE,READONLY
+ENTRY
+LDR R0, =num ; 
+LDR R1, [R0] ; 
+MOV R2, R1 ;
+next SUBS R2, R2,#01 ; 
+MUL R1, R2, R1 ;
+ CMP R2, #01 ; 
+BNE next ; 
+stop B stop
+ AREA DATA1,DATA,READONLY
+num DCD 0x05 ; 
+END
