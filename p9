@@ -1,0 +1,36 @@
+#include <LPC214x.H>
+const unsigned char hex_digits[] = {
+0x3F, // 0
+0x06, // 1
+0x5B, // 2
+0x4F, // 3
+0x66, // 4
+0x6D, // 5
+0x7D, // 6
+0x07, // 7
+0x7F, // 8
+0x6F, // 9
+0x77, // A
+0x7C, // B
+0x39, // C
+0x5E, // D
+0x79, // E
+0x71 // F
+};
+void delay(unsigned int count) {
+unsigned int i;
+for(i=0; i<count; i++);
+}
+int main() {
+PINSEL0 = 0x00000000; // Configure P0.0 to P0.7 as GPIO
+IODIR0 = 0x000000FF; // P0.0 to P0.7 as output
+while(1) {
+int i;
+for(i=0; i<16; i++) {
+IOPIN0 = (IOPIN0 & 0xFFFFFF00) | hex_digits[i];
+delay(500000); // Adjust delay as needed
+}
+}
+}
+
+Pro 3
