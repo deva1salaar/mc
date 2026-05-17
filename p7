@@ -1,0 +1,25 @@
+#include <LPC214x.H>
+#include <stdio.h>
+void UART0_Init(void) {
+PINSEL0 = 0x00000005; // Enable UART0 on P0.0 and P0.1
+U0LCR = 0x83; // 8 bits, no Parity, 1 Stop bit, DLAB=1
+U0DLL = 97; // 9600 Baud Rate @ 15MHz PCLK
+U0LCR = 0x03; // DLAB = 0
+}
+void UART0_SendChar(char ch) {
+while(!(U0LSR & 0x20)); // Wait until THR is empty
+U0THR = ch;
+}
+int main() {
+UART0_Init();
+while(1) {
+char message[] = "Hello World\r\n";
+int i;
+for(i=0; message[i]!='\0'; i++) {
+UART0_SendChar(message[i]);
+}
+for(i=0; i<1000000; i++); // Delay
+}
+}
+
+Pro 1
