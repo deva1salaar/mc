@@ -1,13 +1,41 @@
- AREA mult,CODE,READONLY
- ENTRY
- LDR R0, =NUM1 ;
- LDR R1, =NUM2 ;
- LDR R2,[R0] ; 
- LDR R3,[R1] ; 
- MUL R2, R3, R2 ; 
-result in R2
-stop B stop
- AREA DATA1,DATA,READONLY
-NUM1 DCD 0x05
-NUM2 DCD 0x06
- END
+#pgm1
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Input, Embedding, Flatten, Dense
+from sklearn.manifold import TSNE
+sentences = [
+    "deep learning improves computer vision and language processing",
+    "neural networks are powerful tools for artificial intelligence",
+    "word embeddings capture meaning of words in text",
+    "language models use embeddings to represent words"
+]
+words = " ".join(sentences).lower().split()
+vocab = sorted(set(words))
+word2 = {w: i for i, w in enumerate(vocab)}
+vocab_size = len(vocab)
+window = 2
+centre = []
+context = []
+for i in range(len(words)):
+    for j in range(i - window, i + window + 1):
+        if j >= 0 and j < len(words) and j != i:
+            centre.append(word2[words[i]])
+            context.append(word2[words[j]])
+x_train = np.array(centre)
+y_train = np.array(context)
+model = Sequential([Input(shape=(1,)),Embedding(vocab_size, 8),Flatten(),Dense(vocab_size, activation='softmax')])
+model.compile(optimizer='adam',loss='sparse_categorical_crossentropy')
+model.fit(x_train, y_train, epochs=100, verbose=0)
+embeddings = model.layers[0].get_weights()[0]
+for w in vocab[:10]:
+    print(w, "->", np.round(embeddings[word2[w]], 2))
+points = TSNE(n_components=2,perplexity=5,random_state=42).fit_transform(embeddings)
+plt.figure(figsize=(8, 6))
+plt.scatter(points[:, 0], points[:, 1])
+
+for i, w in enumerate(vocab):
+    plt.annotate(w, (points[i, 0], points[i, 1]))
+
+plt.title("Skip-gram Word Embeddings")
+plt.show()
