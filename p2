@@ -1,15 +1,32 @@
-AREA sum,CODE,READONLY
-ENTRY
-LDR R0, =array ; 
-LDR R1, LEN ; 
-EOR R2, R2, R2 ; 
-next LDR R3,[R0] ;
-ADD R2, R2, R3 ; 
- ADD R0, R0, #+4 ; 
-SUBS R1, R1,#01 ; 
-BNE next ; 
-stop B stop ; 
- AREA DATA1,DATA,READONLY
-array DCD 0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09
-LEN DCD 0X0A
-END
+#pgm2
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow import keras
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+
+# Dataset + split
+X, y = make_moons(n_samples=1000, noise=0.1, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Deep network: 100 -> 50 -> 1
+model = keras.Sequential([
+    keras.layers.Input(shape=(2,)),
+    keras.layers.Dense(100, activation="relu"),
+    keras.layers.Dense(50, activation="relu"),
+    keras.layers.Dense(1, activation="sigmoid"),
+])
+model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+
+# Train + evaluate
+model.fit(X_train, y_train, epochs=30, batch_size=32, validation_split=0.1, verbose=1)
+loss, acc = model.evaluate(X_test, y_test, verbose=0)
+print(f"Test Loss: {loss:.4f}  Test Accuracy: {acc:.4f}")
+
+# Decision boundary
+xx, yy = np.meshgrid(np.linspace(-2, 3, 200), np.linspace(-1.5, 2, 200))
+Z = model.predict(np.c_[xx.ravel(), yy.ravel()], verbose=0).round().reshape(xx.shape)
+plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral, alpha=0.8)
+plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=plt.cm.Spectral)
+plt.title("Decision Boundary")
+plt.show()
