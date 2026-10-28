@@ -1,36 +1,38 @@
-#include <LPC214x.H>
-void delay(unsigned int count) {
-unsigned int i;
-for(i=0; i<count; i++);
-}
-void stepper_rotate(int direction) {
-const unsigned char step_sequence[] = {0x09, 0x08, 0x0C, 0x04, 0x06, 0x02, 0x03, 0x01};
-static int step = 0;
-int i;
-if(direction == 1) { // Clockwise
-for(i=0; i<50; i++) {
-IOPIN0 = (IOPIN0 & 0xFFFFFF00) | step_sequence[step];
-step = (step + 1) % 8;
-delay(10000);
-}
-}
-else { // Anti-clockwise
-for(i=0; i<50; i++) {
-IOPIN0 = (IOPIN0 & 0xFFFFFF00) | step_sequence[step];
-step = (step - 1 + 8) % 8;
-delay(10000);
-}
-}
-}
-int main() {
-PINSEL0 = 0x00000000; // Configure P0.0 to P0.7 as GPIO
-IODIR0 = 0x000000FF; // P0.0 to P0.7 as output
-while(1) {
-stepper_rotate(1); // Clockwise
-delay(500000);
-stepper_rotate(0); // Anti-clockwise
-delay(500000);
-}
-}
+#pgm 8
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras import layers, models
 
-Pro 2
+# Load IMDB reviews (already converted to word-index numbers)
+num_words, max_len = 10000, 200
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.imdb.load_data(num_words=num_words)
+
+# Pad every review to the same length
+x_train = tf.keras.preprocessing.sequence.pad_sequences(x_train, maxlen=max_len)
+x_test = tf.keras.preprocessing.sequence.pad_sequences(x_test, maxlen=max_len)
+
+# Embedding -> Bi-LSTM -> Dense(sigmoid)
+model = models.Sequential([
+    layers.Input(shape=(max_len,)),
+    layers.Embedding(num_words, 32),
+    layers.Bidirectional(layers.LSTM(32)),
+    layers.Dense(1, activation="sigmoid"),
+])
+model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+
+# Train + evaluate
+history = model.fit(x_train, y_train, epochs=3, batch_size=128, validation_data=(x_test, y_test))
+loss, acc = model.evaluate(x_test, y_test, verbose=0)
+print(f"Test Accuracy: {acc:.4f}")
+
+# Predict one random review
+i = np.random.randint(len(x_test))
+p = model.predict(x_test[i:i+1], verbose=0)[0][0]
+print("Predicted:", "Positive" if p > 0.5 else "Negative",
+      "| Actual:", "Positive" if y_test[i] == 1 else "Negative")
+
+# Accuracy graph
+plt.plot(history.history["accuracy"], label="Train")
+plt.plot(history.history["val_accuracy"], label="Validation")
+plt.xlabel("Epoch"); plt.ylabel("Accuracy"); plt.legend(); plt.show()
